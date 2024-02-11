@@ -55,7 +55,7 @@ class Birthday(Field):
         new_val = datetime.strptime(re.sub(r'[.-/]', ' ', value), '%d %m %Y')
 
         if isinstance(new_val, date):
-            self.__value = new_val
+            self.__value = new_val.date()
         else:
             raise ValueError
             
@@ -114,7 +114,9 @@ class Record:
         return result
 
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+        return f"Contact name: {self.name.value}, " \
+            f"phones: {'; '.join(p.value for p in self.phones)}, " \
+                f"bDay: {self.birthday.value if bool(self.birthday) != False else 'None'}"
 
 class AddressBook(UserDict):
     min_len = 0
@@ -134,7 +136,7 @@ class AddressBook(UserDict):
     def __iter__(self):
         return self
 
-    # виводить увесь список
+    # Shows entire list
     def __next__(self):
         if self.min_len == len(self.data.values()):
             raise StopIteration
@@ -144,7 +146,7 @@ class AddressBook(UserDict):
 
             return value
 
-    # посторінкове виведення списку
+    # Shows certain amount of pages
     def custom_iterator(self, end):
         while end+self.min_len <= len(self.data.values()):
             string_view = ''
@@ -158,51 +160,51 @@ class AddressBook(UserDict):
 
         raise StopIteration
 
-# тут додала ту перевірку з LMS з минулих ДЗ
+# Tests for some functionality
 if __name__ == '__main__':
     book = AddressBook()
 
-    # Створення запису для John
+    # Creating a record for John
     john_record = Record("John")
     john_record.add_phone("1234567890")
     john_record.add_phone("5555555555")
     john_record.add_birthday("20/01/1994")
     print(john_record)
 
-    # Додавання запису John до адресної книги
+    # Adding John's record to address book
     book.add_record(john_record)
 
-    # Створення та додавання нового запису для Jane
+    # Creaing and adding new record for Jane
     jane_record = Record("Jane")
     jane_record.add_phone("9876543210")
     book.add_record(jane_record)
 
-    # Знаходження та редагування телефону для John
+    # Finding and editing John's record
     john = book.find("John")
     john.edit_phone("1234567890", "1112223333")
 
-    print(john)  # Виведення: Contact name: John, phones: 1112223333; 5555555555
+    print(john)  # Output : Contact name: John, phones: 1112223333; 5555555555
 
-    # Пошук конкретного телефону у записі John
+    # Search for a certain phone num for John
     found_phone = john.find_phone("5555555555")
     print(f"{john.name.value}: {found_phone}")
 
-    # Видалення запису Jane
+    # Deleting Jane's record
     book.delete("Jane")
 
-    # Перевірки для модуля 11
+    # Tests for module 11
     
-    # Кількість днів до наступного дня народження контакту
+    # The number of days until the contact's next birthday
     found_date = john.days_to_birthday()
     print(found_date)
    
-    # Додаю 20 рандомних записів
+    # Adding 20 random records
     for i in range(20):
         new_record = Record(f"John Dou_{i}")
         new_record.add_phone(str(randint(1000000000, 9000000000)))
         book.add_record(new_record)
 
-    # Посторінковий висновок, виведення записів через ітератор по 5 записів
+    # Page display, output of records through an iterator of 5 records
     newiter = book.custom_iterator(5)
     
     print(next(newiter))

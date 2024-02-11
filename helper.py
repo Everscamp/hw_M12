@@ -1,23 +1,21 @@
 import re
 import classes
 import csv
-import json
+
 
 contacts = {}
 phone_pattern = r'\d+'
 name_pattern = r'[a-zA-Z_]+'
 operator_pattern = r'(birthday)|(delete phone)|(show all)|(good bye)|[a-zA-Z_]+\s?'
 phone_operator_pattern = r'(add)|(change)|(delete phone)'
-
-
 book = classes.AddressBook()
 
-# remove spaces at the beginning and at the end of the string and lower case the string
+# Remove spaces at the beginning and at the end of the string and lower case the string
 def operator_handler(operator):
     parced_operator = re.search(operator_pattern, operator)
     return parced_operator.group().lower().strip()
 
-# defines name and telephone number
+# Defines name and telephone number
 def operand_maker(operator):
     operands = []
     trimmedContact = re.sub(phone_operator_pattern, '', operator)
@@ -37,11 +35,11 @@ def operand_maker(operator):
 
     return operands
 
-#simple welcome function
+#Simple welcome function
 def hello(operator):
     return 'How can I help you?'
 
-# adds a phone number to the contacts list
+# Adds a phone number to the contacts list
 def add(operator):
     phoneName = operand_maker(operator)[0]
     phoneNum = operand_maker(operator)[1]
@@ -59,7 +57,7 @@ def add(operator):
 
         return f'Contact {phoneName} has been added!' 
 
-# adds a phone number to the contacts list
+# Adds a birthday to the contacts
 def birthday(operator):
     trimmed = re.sub('birthday', '', operator)
     phoneName = re.search(name_pattern, trimmed).group().capitalize()
@@ -73,7 +71,7 @@ def birthday(operator):
     else:
         return f'Woopsie no contact with {phoneName} name!' 
 
-# update the contact number
+# Update the contact number
 def change(operator):
     phoneName = operand_maker(operator)[0]
     phoneNums = operand_maker(operator)[1]
@@ -83,19 +81,17 @@ def change(operator):
 
     return f'Contact {phoneName} has been updated!'
 
-# delete the contact number for a certain contact
+# Delete the contact number for a certain contact
 def delete_phone(operator):
     phoneName = operand_maker(operator)[0]
     phoneNums = operand_maker(operator)[1]
-
-    print(phoneNums)
 
     contact = book.find(phoneName)
     contact.remove_phone(phoneNums[0])
 
     return f'Phone {phoneNums[0]} was deleted fron contact {phoneName}!'
 
-# delete the contact
+# Delete the contact
 def delete(operator):
     phoneName = re.search(name_pattern, operator.replace("delete", ""))
 
@@ -103,12 +99,11 @@ def delete(operator):
         raise Exception('No name? Enter the contact in the format: "Name" "Phone Number"')
     
     capitalized_name = phoneName.group().capitalize()
-    
     book.delete(capitalized_name)
 
     return f'Contact {capitalized_name} was deleted!'
 
-# displays the phone number of the requested contact
+# Displays the phone number of the requested contact
 def contact(operator):
     phoneName = re.search(name_pattern, operator.replace("contact", ""))
 
@@ -116,47 +111,52 @@ def contact(operator):
         raise Exception('No name? Enter the contact in the format: "Name" "Phone Number"')
     
     capitalized_name = phoneName.group().capitalize()
-    
     record = book.find(capitalized_name)
+
     return record
 
-# shows contact list
+# Shows contact list
 def show_all(operator):
     book_view = book.custom_iterator(len(book))
     return f'{next(book_view)}'
 
-# simple farewell function
+# Simple farewell function
 def goodbye(operator):
     save(operator)
 
     return 'Good bye!'
 
-# start of functions for csv file
+# Start of functions for csv file
+# Save your contacts to csv
 def save(operator):
     try:
         with open('contacts.csv', 'x', newline='') as fh:
-            field_names = ['Name', 'Phones']
+            field_names = ['Name', 'Phones', 'bDay']
             writer = csv.DictWriter(fh, fieldnames=field_names)
             writer.writeheader()
             
             for i in book:
-                writer.writerow({'Name': i.name.value, 'Phones': '; '.join(p.value for p in i.phones)})
+                writer.writerow({'Name': i.name.value, 
+                'Phones': '; '.join(p.value for p in i.phones), 
+                'bDay' : i.birthday.value if bool(i.birthday) != False else 'None'})
                 
         return f'Book formed!'
     except:
         with open('contacts.csv', 'a', newline='') as fh:
             writer = csv.writer(fh)
             for i in book:
-                writer.writerow([i.name.value, '; '.join(p.value for p in i.phones)])
+                writer.writerow([i.name.value, 
+                '; '.join(p.value for p in i.phones), 
+                i.birthday.value if bool(i.birthday) != False else 'None'])
 
         return f'Book updated!'
     
-# opens saved file 
+# Opens saved file 
 def unfold(operator):
     with open('contacts.csv', newline='') as fh:
         print(fh.read())
 
-# search contacts by name or number in saved file
+# Search contacts by name or number in saved file
 def search_contact(operator):
     searcheble = operator.replace("search", "").strip()
 
@@ -166,26 +166,30 @@ def search_contact(operator):
             phoneName = re.search(searcheble, row.get('Name'))
             phoneNum = re.search(searcheble, row.get('Phones'))
             if phoneName or phoneNum:
-                return f'Search result:\nName: {row.get("Name")}, Phone: {row.get("Phones")}'
+                return f'Search result:\n' \
+                    f'Name: {row.get("Name")}, ' \
+                        f'Phone: {row.get("Phones")}, ' \
+                            f'bDay: {row.get("bDay")}'
 
-# end of csv related functions
+# End of csv related functions
 
-# shows commad list
+# Shows commad list
 def commands(operator):
     return 'The list of commands: \n \
         Type "contact [name of the contact]" to see its phone num.\n \
         Type "phone [phone of the contact]" to see if its exist.\n \
         Type "add [name] [phone number]" to add new contact.\n \
         Type "change [name] [old phone number] [new phone number]" to add new contact.\n \
+        Type "birthday [name] [birthday date in date format]" to add bDay to the contact.\n \
         Type "delete phone [name] [phone number]" to delete phone from the contact.\n \
         Type "delete [name]" to delte the contact.\n \
         Type "show all" to see all contacts \n \
         To sava data as csv or work with saved book use next commands: \n \
         Type "save" to save the address book \n \
+        Type "search" to search the contact (search is case sensitive) \n \
         Type "unfold" to open saved book \n \
         And the ultimate command: \n \
         Type "end" to exit'
-
 
 OPERATIONS = {
     'hello': hello,
