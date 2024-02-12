@@ -122,15 +122,13 @@ def show_all(operator):
 
 # Simple farewell function
 def goodbye(operator):
-    save(operator)
-
     return 'Good bye!'
 
 # Start of functions for csv file
 # Save your contacts to csv
 def save(operator):
     try:
-        with open('contacts.csv', 'x', newline='') as fh:
+        with open('contacts.csv', 'w', newline='') as fh:
             field_names = ['Name', 'Phones', 'bDay']
             writer = csv.DictWriter(fh, fieldnames=field_names)
             writer.writeheader()
@@ -142,14 +140,18 @@ def save(operator):
                 
         return f'Book formed!'
     except:
-        with open('contacts.csv', 'a', newline='') as fh:
-            writer = csv.writer(fh)
-            for i in book:
-                writer.writerow([i.name.value, 
-                '; '.join(p.value for p in i.phones), 
-                i.birthday.value if bool(i.birthday) != False else 'None'])
+        return f'Woopsie!'
 
-        return f'Book updated!'
+# Adds new contacts to the end of the file
+def updating(operator):
+    with open('contacts.csv', 'a', newline='') as fh:
+        writer = csv.writer(fh)
+        for i in book:
+            writer.writerow([i.name.value, 
+            '; '.join(p.value for p in i.phones), 
+            i.birthday.value if bool(i.birthday) != False else 'None'])
+
+    return f'Book updated!'
     
 # Opens saved file 
 def unfold(operator):
@@ -171,6 +173,17 @@ def search_contact(operator):
                         f'Phone: {row.get("Phones")}, ' \
                             f'bDay: {row.get("bDay")}'
 
+# Download the book from csv into classes to work with
+def downloading(operator):
+    with open('contacts.csv', newline='') as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            new_record = classes.Record(row.get("Name"))
+            new_record.add_phone(row.get("Phones"))
+            new_record.add_birthday(row.get("bDay"))
+            book.add_record(new_record)
+
+        return f'Book downloaded!'
 # End of csv related functions
 
 # Shows commad list
@@ -185,9 +198,11 @@ def commands(operator):
         Type "delete [name]" to delte the contact.\n \
         Type "show all" to see all contacts \n \
         To sava data as csv or work with saved book use next commands: \n \
-        Type "save" to save the address book \n \
+        Type "save" to save the address book (rewrite old book!!!) \n \
         Type "search" to search the contact (search is case sensitive) \n \
-        Type "unfold" to open saved book \n \
+        Type "download" to download book from csv to work with it \n \
+        Type "update" to add new contacts to the end of the book \n \
+        Type "read" to open saved csv \n \
         And the ultimate command: \n \
         Type "end" to exit'
 
@@ -202,7 +217,9 @@ OPERATIONS = {
     'show all': show_all,
     'goodbye': goodbye,
     'save': save,
-    'unfold': unfold,
+    'read': unfold,
+    'download': downloading,
+    'update': updating,
     'birthday': birthday,
     'commands': commands
 }

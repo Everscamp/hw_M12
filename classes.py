@@ -52,7 +52,7 @@ class Birthday(Field):
 
     @value.setter
     def value(self, value):
-        new_val = datetime.strptime(re.sub(r'[.-/]', ' ', value), '%d %m %Y')
+        new_val = datetime.strptime(re.sub(r'-', ' ', value), '%Y %m %d')
 
         if isinstance(new_val, date):
             self.__value = new_val.date()
@@ -77,7 +77,7 @@ class Record:
             try:
                 self.birthday = Birthday(birthday)  
             except ValueError:
-                print('Wrong date format! Enter the date in format day-month-year or day.month.year.')
+                print('Wrong date format! Enter the date in format year-month-day!')
 
     def remove_phone(self, phone):
         phone_num = Phone(phone)
